@@ -1,13 +1,41 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var express_1 = __importDefault(require("express"));
-var app = express_1.default();
-app.get('/', function (req, res, next) {
-    res.send('Hi Darwin');
-});
+var express = require("express");
+var app = express();
+var morgan = require("morgan");
+var logger = morgan("dev");
+var bodyparser = require("body-parser");
+var apiGetTours_1 = require("./api/tours/apiGetTours");
+var apiGetTourDetails_1 = require("./api/tours/apiGetTourDetails");
+var apiCreateTour_1 = require("./api/tours/apiCreateTour");
+var apiDeleteTour_1 = require("./api/tours/apiDeleteTour");
+var apiUpdateTour_1 = require("./api/tours/apiUpdateTour");
+var apiUploadImage_1 = require("./api/tours/apiUploadImage");
+var errorHandling_1 = require("./api/general/errorHandling");
+// console.log(DataStore.tours);
+// app.get('/', (req, res, next) => {
+//   res.send('Hi Darwin');
+// });
+var authenticator = function (req, res, next) {
+    var username = "Andy123";
+    req.user = username;
+    next();
+};
+var jsonParser = bodyparser.json();
+var urlEncodedParser = bodyparser.urlencoded({ extended: true });
+app.use(jsonParser);
+app.use(urlEncodedParser);
+app.use(authenticator);
+app.use(logger);
+var path = require("path");
+app.use("/static", express.static(path.join(__dirname, "public", "img")));
+app.get('/tours', logger, apiGetTours_1.apiGetTours);
+app.get('/tours/:id', apiGetTourDetails_1.apiGetTourDetail);
+app.post('/tours', jsonParser, apiCreateTour_1.apiCreateTour);
+app.delete('/tours/:id', apiDeleteTour_1.apiDeleteTour);
+app.put('/tours/:id', jsonParser, apiUpdateTour_1.apiUpdateTour);
+app.post("/tours/:id/img", apiUploadImage_1.apiUploadImage);
 app.listen(process.env.PORT || 8091, function () {
     console.log('Server started');
 });
+app.use(errorHandling_1.apiErrorHandler);
